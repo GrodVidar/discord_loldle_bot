@@ -67,6 +67,7 @@ class Champion:
 class GameState:
     ability = None
     champion = None
+    thread = None
 
     def __init__(self):
         self.attempts = 0
@@ -75,6 +76,7 @@ class GameState:
         self.attempts = 0
         self.champion = None
         self.ability = None
+        self.thread = None
 
     def start_game(self):
         self.attempts = 0
