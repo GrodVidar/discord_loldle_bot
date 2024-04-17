@@ -4,6 +4,9 @@
 ### Custom ###
 .idea/
 images/
+*.js
+*.json
+*.db
 
 
 ### PyCharm ###

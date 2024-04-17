@@ -1,22 +1,46 @@
-from models import Champion
 import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import create_engine
+from models import Base
+from repository import populate_database
 
 load_dotenv()
 
 TOKEN = os.getenv('BOT_TOKEN')
 GAME = os.getenv('GAME')
 
+db_file = 'loldle.db'
+if not os.path.exists(db_file):
+    engine = create_engine(f'sqlite:///{db_file}')
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    with Session() as session:
+        populate_database(session)
 
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
+else:
+    engine = create_engine(f'sqlite:///{db_file}')
+    Session = sessionmaker(bind=engine)
 
-cogs = ['Functions.guess_ability', 'Functions.guess_splash']
 
-client = commands.Bot(command_prefix='_', help_command=None, intents=intents)
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.messages = True
+        intents.message_content = True
+        super().__init__(command_prefix={'_'}, intents=intents)
+
+    @property
+    def session(self):
+        return Session()
+
+
+client = Bot()
+
+cogs = ['Functions.guess_ability', 'Functions.guess_splash', 'Functions.guess_classic']
 
 
 @client.event
