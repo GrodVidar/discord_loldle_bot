@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+
 from models import GameState
 
 
@@ -10,10 +11,12 @@ class GuessAbility(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if (self.game_state.is_game_active
-                and not message.author.bot
-                and not message.content.startswith('_')
-                and message.channel == self.game_state.thread):
+        if (
+            self.game_state.is_game_active
+            and not message.author.bot
+            and not message.content.startswith("_")
+            and message.channel == self.game_state.thread
+        ):
             if self.game_state.guess(message.content):
                 await message.channel.send(
                     f"{message.author} guessed correct!\nIt took {self.game_state.attempts} attempts.",
@@ -35,8 +38,7 @@ class GuessAbility(commands.Cog):
 
             self.game_state.ability.get_image()
             thread = await ctx.channel.create_thread(
-                name='Guess Ability',
-                type=discord.ChannelType.public_thread
+                name="Guess Ability", type=discord.ChannelType.public_thread
             )
             self.game_state.thread = thread
             await thread.send(file=discord.File("images/edited_ability.png"))
@@ -47,12 +49,19 @@ class GuessAbility(commands.Cog):
     async def hint(self, ctx):
         if ctx.channel == self.game_state.thread:
             if self.game_state.attempts < 5:
-                await ctx.send(f"{5 - self.game_state.attempts} Attempts left to get the next hint")
+                await ctx.send(
+                    f"{5 - self.game_state.attempts} Attempts left to get the next hint"
+                )
             elif 5 <= self.game_state.attempts < 10:
-                await ctx.send(f"Ability name: {self.game_state.ability.name}\n"
-                               f"Next hint after {10 - self.game_state.attempts} attempts")
+                await ctx.send(
+                    f"Ability name: {self.game_state.ability.name}\n"
+                    f"Next hint after {10 - self.game_state.attempts} attempts"
+                )
             else:
-                await ctx.send(f"Ability name: {self.game_state.ability.name}", file=discord.File('images/ability.png'))
+                await ctx.send(
+                    f"Ability name: {self.game_state.ability.name}",
+                    file=discord.File("images/ability.png"),
+                )
 
 
 async def setup(bot):
