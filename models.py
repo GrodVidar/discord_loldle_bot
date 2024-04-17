@@ -2,40 +2,77 @@ import requests
 import random
 import urllib.request
 from PIL import Image
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, func
+from sqlalchemy.orm import relationship, backref, reconstructor, joinedload
+
+Base = declarative_base()
 
 
-def get_champions(is_random=False):
-    champions_url = 'https://ddragon.leagueoflegends.com/cdn/14.7.1/data/en_US/champion.json'
-    response = requests.get(champions_url)
-    if response.status_code == 200:
-        champions_data = response.json()
-        if is_random:
-            champion = random.choice(list(champions_data['data']))
-            return champions_data['data'][champion]['name'], champions_data['data'][champion]['id']
-        else:
-            champions = []
-            for champion in champions_data['data']:
-                champions.append((champions_data['data'][champion]['name'], champions_data['data'][champion]['id']))
-            return champions
+class Skin(Base):
+    __tablename__ = 'skin'
+    pk = Column(Integer, primary_key=True)
+    name = Column(String)
+    number = Column(Integer)
+    image_url = Column(String)
+    champion_pk = Column(Integer, ForeignKey('champion.pk'))
 
-
-def get_champion_data(champion_name):
-    champion_url = f'https://ddragon.leagueoflegends.com/cdn/14.7.1/data/en_US/champion/{champion_name}.json'
-    response = requests.get(champion_url)
-    return response.json()
-
-
-class Skin:
-    def __init__(self, data, champion_id):
-        self.name = data['name']
-        self.number = data['num']
+    def __init__(self, name, number, champion_id, **kwargs):
+        super().__init__(**kwargs)
+        self._x = 0
+        self._y = 0
+        self._width = 120
+        self._height = 70
+        self.name = name
+        self.number = number
         self.image_url = f'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/{champion_id}_{self.number}.jpg'
-        self.width_increase = 60
-        self.height_increase = 35
-        self.width = 120
-        self.height = 70
-        self.x = 0
-        self.y = 0
+
+    @property
+    def width_increase(self):
+        return 60
+
+    @property
+    def height_increase(self):
+        return 35
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        self._width = value
+
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, value):
+        self._height = value
+
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        self._x = value
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+
+    @reconstructor
+    def init_on_load(self):
+        self._width = 120
+        self._height = 70
+        self._x = 0
+        self._y = 0
 
     def zoom_at(self, img):
         w, h = img.size
@@ -72,12 +109,22 @@ class Skin:
             im.save('images/edited_splash.jpg')
 
 
-class Ability:
-    def __init__(self, data, is_passive):
-        self.name = data['name']
+class Ability(Base):
+    __tablename__ = 'ability'
+    pk = Column(Integer, primary_key=True)
+    name = Column(String)
+    is_passive = Column(Boolean)
+    image_url = Column(String)
+    patch = Column(String)
+    champion_pk = Column(Integer, ForeignKey('champion.pk'))
+
+    def __init__(self, name, is_passive, patch, image_endpoint, **kwargs):
+        super().__init__(**kwargs)
+        self.name = name
         self.is_passive = is_passive
-        self.image_url = ('https://ddragon.leagueoflegends.com/cdn/14.7.1/img/' +
-                          ('passive/' if self.is_passive else 'spell/') + data['image']['full'])
+        self.patch = patch
+        self.image_url = (f'https://ddragon.leagueoflegends.com/cdn/{self.patch}/img/' +
+                          ('passive/' if self.is_passive else 'spell/') + image_endpoint)
 
     def get_image(self):
         urllib.request.urlretrieve(self.image_url, 'images/ability.png')
@@ -93,20 +140,143 @@ class Ability:
         return f"ability_name: {self.name}, is_passive: {self.is_passive}"
 
 
-class Champion:
-    def __init__(self):
-        self.name, self.id = get_champions(True)
-        data = get_champion_data(self.id)
-        self.is_mana_user = data['data'][self.id]['partype'] == 'Mana'
-        self.abilities = []
-        for ability in data['data'][self.id]['spells']:
-            self.abilities.append(Ability(ability, False))
+champion_position = Table(
+    "champion_position",
+    Base.metadata,
+    Column('champion_pk', Integer, ForeignKey('champion.pk')),
+    Column('position_pk', Integer, ForeignKey('position.pk'))
+)
+
+
+class Position(Base):
+    __tablename__ = 'position'
+    pk = Column(Integer, primary_key=True)
+    name = Column(String)
+    champions = relationship(
+        'Champion', secondary=champion_position, back_populates='positions'
+    )
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+
+champion_specie = Table(
+    'champion_specie',
+    Base.metadata,
+    Column('champion_pk', Integer, ForeignKey('champion.pk')),
+    Column('specie_pk', Integer, ForeignKey('specie.pk'))
+)
+
+
+class Specie(Base):
+    __tablename__ = 'specie'
+    pk = Column(Integer, primary_key=True)
+    name = Column(String)
+    champions = relationship(
+        'Champion', secondary=champion_specie, back_populates='species'
+    )
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+
+champion_range_type = Table(
+    'champion_range_type',
+    Base.metadata,
+    Column('champion_pk', Integer, ForeignKey('champion.pk')),
+    Column('range_type_pk', Integer,ForeignKey('range_type.pk'))
+)
+
+
+class RangeType(Base):
+    __tablename__ = 'range_type'
+    pk = Column(Integer, primary_key=True)
+    type = Column(String)
+    champions = relationship(
+        'Champion', secondary=champion_range_type, back_populates='range_types'
+    )
+
+    def __repr__(self):
+        return self.type
+
+    def __str__(self):
+        return self.type
+
+
+champion_region = Table(
+    'champion_region',
+    Base.metadata,
+    Column('champion_pk', Integer, ForeignKey('champion.pk')),
+    Column('region_pk', Integer, ForeignKey('region.pk'))
+)
+
+
+class Region(Base):
+    __tablename__ = 'region'
+    pk = Column(Integer, primary_key=True)
+    name = Column(String)
+    champions = relationship(
+        'Champion', secondary=champion_region, back_populates='regions'
+    )
+
+
+class Champion(Base):
+    __tablename__ = 'champion'
+    pk = Column(Integer, primary_key=True)
+    champion_id = Column(String)
+    name = Column(String)
+    gender = Column(String)
+    positions = relationship(
+        'Position', secondary=champion_position, back_populates='champions'
+    )
+    species = relationship(
+        'Specie', secondary=champion_specie, back_populates='champions'
+    )
+    resource = Column(String)
+    range_types = relationship(
+        'RangeType', secondary=champion_range_type, back_populates='champions'
+    )
+    regions = relationship(
+        'Region', secondary=champion_region, back_populates='champions'
+    )
+    release_year = Column(Integer)
+    skins = relationship("Skin", backref=backref("champion"))
+    abilities = relationship("Ability", backref=backref("champion"))
+    patch = Column(String)
+
+    def __init__(self, champion_id, name, gender, positions, species, resource, range_types, regions, release_year, **kwargs):
+        super().__init__(**kwargs)
+        self.champion_id = champion_id
+        self.name = name
+        self.gender = gender
+        self.positions = [Position(name=name) for name in positions]
+        self.species = [Specie(name=name) for name in species]
+        self.resource = resource
+        self.range_types = [RangeType(type=type) for type in range_types]
+        self.regions = [Region(name=name) for name in regions]
+        self.release_year = release_year
+        self.patch = self.get_latest_patch()  # TODO: CREATE
+        data = self.get_champion_data()
+        for ability in data['data'][self.champion_id]['spells']:
+            self.abilities.append(Ability(ability['name'], False, self.patch, ability['image']['full']))
+        passive = data['data'][self.champion_id]['passive']
         self.abilities.append(
-            Ability(data['data'][self.id]['passive'], True)
+            Ability(passive['name'], True, self.patch, passive['image']['full'])
         )
-        self.skins = []
-        for skin in data['data'][self.id]['skins']:
-            self.skins.append(Skin(skin, self.id))
+        for skin in data['data'][self.champion_id]['skins']:
+            self.skins.append(Skin(skin['name'], skin['num'], self.champion_id))
+
+    def __str__(self):
+        return f"Champion name: {self.name}"
+
+    def __repr__(self):
+        return f"Champion name: {self.name}"
 
     def get_random_ability(self):
         return random.choice(self.abilities)
@@ -114,9 +284,34 @@ class Champion:
     def get_random_skin(self):
         return random.choice(self.skins)
 
+    def get_champion_data(self):
+        champion_url = f'https://ddragon.leagueoflegends.com/cdn/{self.patch}/data/en_US/champion/{self.champion_id}.json'
+        response = requests.get(champion_url)
+        print(response.status_code, champion_url)
+        return response.json()
+
+    @staticmethod
+    def get_latest_patch():
+        patch_url = 'https://ddragon.leagueoflegends.com/api/versions.json'
+        response = requests.get(patch_url)
+        data = response.json()
+        return data[0]
+
+    @staticmethod
+    def get_random_champion(session):
+        champion = session.query(Champion).options(
+            joinedload(Champion.positions),
+            joinedload(Champion.species),
+            joinedload(Champion.range_types),
+            joinedload(Champion.regions)
+        ).order_by(func.random()).first()
+        print(champion)
+        return champion
+
 
 class GameState:
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         self.attempts = 0
         self.ability = None
         self.champion = None
@@ -134,7 +329,7 @@ class GameState:
 
     def start_game(self):
         self.attempts = 0
-        self.champion = Champion()
+        self.champion = Champion.get_random_champion(self.bot.session)
         self.is_game_active = True
 
     def guess(self, champion: str):
