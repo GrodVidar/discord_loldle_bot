@@ -138,9 +138,9 @@ class GuessClassic(commands.Cog):
     @staticmethod
     def create_box(color, attributes, filename, arrow=None):
         if arrow == "gt":
-            img = Image.open("images/classic/templates/arrow_up.png")
-        elif arrow == "lt":
             img = Image.open("images/classic/templates/arrow_down.png")
+        elif arrow == "lt":
+            img = Image.open("images/classic/templates/arrow_up.png")
         else:
             img = Image.new("RGB", (66, 73), color=color)
 
