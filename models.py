@@ -25,35 +25,33 @@ def get_champion_data(champion_name):
     return response.json()
 
 
-def zoom_at(img, x, y, zoom):
-    w, h = img.size
-    new_x = x - w // zoom
-    new_y = y - h // zoom
-    new_width = w * zoom
-    new_height = h * zoom
-
-    if new_x < 0:
-        new_x = 0
-    if new_y < 0:
-        new_y = 0
-    if new_x + new_width > w:
-        new_width = w - new_x
-    if new_y + new_height > h:
-        new_height = h - new_y
-
-    box = (new_x, new_y, new_x + new_width, new_y + new_height)
-    img = img.crop(box)
-    return img.resize((w, h), Image.Resampling.LANCZOS)
-
-
 class Skin:
     def __init__(self, data, champion_id):
         self.name = data['name']
         self.number = data['num']
         self.image_url = f'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/{champion_id}_{self.number}.jpg'
-        self.current_zoom = 15
+        self.width_increase = 60
+        self.height_increase = 35
+        self.width = 120
+        self.height = 70
         self.x = 0
         self.y = 0
+
+    def zoom_at(self, img):
+        w, h = img.size
+
+        if self.x < 0:
+            self.x = 0
+        if self.y < 0:
+            self.y = 0
+        if self.x + self.width > w:
+            self.width = w - self.x
+        if self.y + self.height > h:
+            self.height = h - self.y
+
+        box = (self.x, self.y, self.x + self.width, self.y + self.height)
+        img = img.crop(box)
+        return img.resize((w, h), Image.Resampling.LANCZOS)
 
     def get_image(self):
         urllib.request.urlretrieve(self.image_url, 'images/splash.jpg')
@@ -61,15 +59,17 @@ class Skin:
             w, h = im.size
             self.x = random.randint(150, w)
             self.y = random.randint(100, h)
-            im = zoom_at(im, self.x, self.y, self.current_zoom)
+            im = self.zoom_at(im)
             im.save('images/edited_splash.jpg')
 
     def zoom_out(self):
-        self.current_zoom -= 1
-        if self.current_zoom > 0:
-            with Image.open('images/splash.jpg') as im:
-                im = zoom_at(im, self.x, self.y, self.current_zoom)
-                im.save('images/edited_splash.jpg')
+        self.x -= self.width_increase // 2
+        self.y -= self.height_increase // 2
+        self.width += self.width_increase
+        self.height += self.height_increase
+        with Image.open('images/splash.jpg') as im:
+            im = self.zoom_at(im)
+            im.save('images/edited_splash.jpg')
 
 
 class Ability:
