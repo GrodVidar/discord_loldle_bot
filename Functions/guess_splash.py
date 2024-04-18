@@ -20,7 +20,8 @@ class GuessSplash(commands.Cog):
         ):
             if self.game_state.guess(message.content):
                 await message.channel.send(
-                    f"{message.author} guessed correct!\nIt took {self.game_state.attempts} attempts.",
+                    f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
+                    f"It took {self.game_state.attempts} attempts.",
                     file=discord.File("images/splash.jpg"),
                 )
                 await self.game_state.stop_game()

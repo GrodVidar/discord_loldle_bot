@@ -24,11 +24,12 @@ class GuessClassic(commands.Cog):
             and not message.content.startswith("_")
             and message.channel == self.game_state.thread
         ):
-            comparison = self.compare_champions(message.content, message.author)
+            comparison = self.compare_champions(message.content)
             await message.channel.send(**comparison)
             if self.game_state.guess(message.content):
                 await message.channel.send(
-                    f"{message.author} guessed correct!\nIt took {self.game_state.attempts} attempts."
+                    f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
+                    f"It took {self.game_state.attempts} attempts."
                 )
                 await self.game_state.stop_game()
 
@@ -44,7 +45,7 @@ class GuessClassic(commands.Cog):
         else:
             await ctx.send("Game is being played now!")
 
-    def compare_champions(self, champion_name, author):
+    def compare_champions(self, champion_name):
         champion = (
             self.bot.session.query(Champion)
             .options(
