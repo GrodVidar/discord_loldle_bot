@@ -16,7 +16,7 @@ TOKEN = os.getenv("BOT_TOKEN")
 GAME = os.getenv("GAME")
 
 db_file = "loldle.db"
-add_file = 'add_champ.json'
+add_file = 'add_champion.json'
 if not os.path.exists(db_file):
     engine = create_engine(f"sqlite:///{db_file}")
     Base.metadata.create_all(engine)

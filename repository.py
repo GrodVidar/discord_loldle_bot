@@ -20,5 +20,5 @@ def populate_database(session, filename):
             )
 
             session.add(champion)
-
+            print(champion.champion_id + " Added to db")
     session.commit()

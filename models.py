@@ -278,7 +278,7 @@ class Champion(Base):
         self.range_types = [RangeType(type=type) for type in range_types]
         self.regions = [Region(name=name) for name in regions]
         self.release_year = release_year
-        self.patch = self.get_latest_patch()  # TODO: CREATE
+        self.patch = self.get_latest_patch()
         data = self.get_champion_data()
         for ability in data["data"][self.champion_id]["spells"]:
             self.abilities.append(
