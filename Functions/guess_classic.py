@@ -95,6 +95,7 @@ class GuessClassic(commands.Cog):
                 "release_year",
             )
             return {
+                'content': champion.name,
                 "files": [
                     discord.File("images/classic/gender.png"),
                     discord.File("images/classic/position.png"),
@@ -137,16 +138,16 @@ class GuessClassic(commands.Cog):
 
     @staticmethod
     def create_box(color, attributes, filename, arrow=None):
+        width, height = (198, 219)
         if arrow == "gt":
             img = Image.open("images/classic/templates/arrow_down.png")
         elif arrow == "lt":
             img = Image.open("images/classic/templates/arrow_up.png")
         else:
-            img = Image.new("RGB", (66, 73), color=color)
+            img = Image.new("RGB", (width, height), color=color)
 
         draw = ImageDraw.Draw(img)
-        draw.text((20, 30), attributes, fill=(0, 0, 0))
-
+        draw.text((100, 100), attributes, fill=(0, 0, 0), align='center', anchor='mm', font_size=25)
         img.save("images/classic/" + filename + ".png")
 
 
