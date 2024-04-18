@@ -3,8 +3,8 @@ import json
 from models import Champion
 
 
-def populate_database(session):
-    with open("champion_data.json", "r") as f:
+def populate_database(session, filename):
+    with open(filename, "r") as f:
         champion_data = json.load(f)
         for data in champion_data:
             champion = Champion(
