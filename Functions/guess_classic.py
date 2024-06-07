@@ -24,6 +24,11 @@ class GuessClassic(commands.Cog):
             and not message.content.startswith("_")
             and message.channel == self.game_state.thread
         ):
+            if message.content == 'give_up':
+                await message.channel.send(f"You guessed {self.game_state.attempts} times.\n"
+                                           f"The correct answer was: {self.game_state.champion.name}")
+                await self.game_state.stop_game()
+                return
             comparison = self.compare_champions(message.content)
             await message.channel.send(**comparison)
             if self.game_state.guess(message.content):
@@ -41,6 +46,7 @@ class GuessClassic(commands.Cog):
             thread = await ctx.channel.create_thread(
                 name="Guess Classic", type=discord.ChannelType.public_thread
             )
+            await thread.send("*Type `give_up` to give up*")
             self.game_state.thread = thread
         else:
             await ctx.send("Game is being played now!")
@@ -148,7 +154,7 @@ class GuessClassic(commands.Cog):
             img = Image.new("RGB", (width, height), color=color)
 
         draw = ImageDraw.Draw(img)
-        draw.text((100, 100), attributes, fill=(0, 0, 0), align='center', anchor='mm', font_size=25)
+        draw.text((100, 100), f"{filename}\n{attributes}", fill=(0, 0, 0), align='center', anchor='mm', font_size=25)
         img.save("images/classic/" + filename + ".png")
 
 

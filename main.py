@@ -16,13 +16,14 @@ TOKEN = os.getenv("BOT_TOKEN")
 GAME = os.getenv("GAME")
 
 db_file = "loldle.db"
+all_champions_file = 'champion_data.json'
 add_file = 'add_champion.json'
 if not os.path.exists(db_file):
     engine = create_engine(f"sqlite:///{db_file}")
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     with Session() as session:
-        populate_database(session, db_file)
+        populate_database(session, all_champions_file)
 else:
     engine = create_engine(f"sqlite:///{db_file}")
     Session = sessionmaker(bind=engine)
