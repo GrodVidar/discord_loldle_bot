@@ -7,6 +7,11 @@ def populate_database(session, filename):
     with open(filename, "r") as f:
         champion_data = json.load(f)
         for data in champion_data:
+            instance = session.query(Champion).filter(
+                Champion.champion_id == data["id"]
+            ).first()
+            if instance:
+                continue
             champion = Champion(
                 data["id"],
                 data["name"],

@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import discord
@@ -10,14 +11,22 @@ from sqlalchemy.orm import sessionmaker
 from models import Base
 from repository import populate_database
 
+parser = argparse.ArgumentParser(description="Loldle")
+parser.add_argument(
+    "--update",
+    action="store_true",
+    help="Flag to trigger update db from champion_data.json",
+)
+args = parser.parse_args()
+
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
 GAME = os.getenv("GAME")
 
 db_file = "loldle.db"
-all_champions_file = 'champion_data.json'
-add_file = 'add_champion.json'
+all_champions_file = "champion_data.json"
+add_file = "add_champion.json"
 if not os.path.exists(db_file):
     engine = create_engine(f"sqlite:///{db_file}")
     Base.metadata.create_all(engine)
@@ -27,6 +36,10 @@ if not os.path.exists(db_file):
 else:
     engine = create_engine(f"sqlite:///{db_file}")
     Session = sessionmaker(bind=engine)
+    if args.update:
+        print('hello')
+        with Session() as session:
+            populate_database(session, all_champions_file)
 
 if os.path.exists(add_file):
     with Session() as session:

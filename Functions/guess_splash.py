@@ -18,11 +18,13 @@ class GuessSplash(commands.Cog):
             and not message.content.startswith("_")
             and message.channel == self.game_state.thread
         ):
-            if message.content == 'give_up':
-                await message.channel.send(f"You guessed {self.game_state.attempts} times.\n"
-                                           f"The correct answer was: {self.game_state.champion.name}\n"
-                                           f"The skin name is: {self.game_state.skin.name}",
-                                           file=discord.File("images/splash.jpg"))
+            if message.content == "give_up":
+                await message.channel.send(
+                    f"You guessed {self.game_state.attempts} times.\n"
+                    f"The correct answer was: {self.game_state.champion.name}\n"
+                    f"The skin name is: {self.game_state.skin.name}",
+                    file=discord.File("images/splash.jpg"),
+                )
                 await self.game_state.stop_game()
                 return
             if self.game_state.guess(message.content):

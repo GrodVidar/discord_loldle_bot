@@ -17,11 +17,13 @@ class GuessAbility(commands.Cog):
             and not message.content.startswith("_")
             and message.channel == self.game_state.thread
         ):
-            if message.content == 'give_up':
-                await message.channel.send(f"You guessed {self.game_state.attempts} times.\n"
-                                           f"The correct answer was: {self.game_state.champion.name}\n"
-                                           f"The ability name is: {self.game_state.ability.name}",
-                                           file=discord.File("images/ability.png"))
+            if message.content == "give_up":
+                await message.channel.send(
+                    f"You guessed {self.game_state.attempts} times.\n"
+                    f"The correct answer was: {self.game_state.champion.name}\n"
+                    f"The ability name is: {self.game_state.ability.name}",
+                    file=discord.File("images/ability.png"),
+                )
                 await self.game_state.stop_game()
                 return
             if self.game_state.guess(message.content):

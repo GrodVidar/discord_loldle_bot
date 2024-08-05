@@ -24,9 +24,11 @@ class GuessClassic(commands.Cog):
             and not message.content.startswith("_")
             and message.channel == self.game_state.thread
         ):
-            if message.content == 'give_up':
-                await message.channel.send(f"You guessed {self.game_state.attempts} times.\n"
-                                           f"The correct answer was: {self.game_state.champion.name}")
+            if message.content == "give_up":
+                await message.channel.send(
+                    f"You guessed {self.game_state.attempts} times.\n"
+                    f"The correct answer was: {self.game_state.champion.name}"
+                )
                 await self.game_state.stop_game()
                 return
             comparison = self.compare_champions(message.content)
@@ -37,7 +39,6 @@ class GuessClassic(commands.Cog):
                     f"It took {self.game_state.attempts} attempts."
                 )
                 await self.game_state.stop_game()
-
 
     @commands.command()
     async def guess_classic(self, ctx):
@@ -102,7 +103,7 @@ class GuessClassic(commands.Cog):
                 "release_year",
             )
             return {
-                'content': champion.name,
+                "content": champion.name,
                 "files": [
                     discord.File("images/classic/gender.png"),
                     discord.File("images/classic/position.png"),
@@ -111,7 +112,7 @@ class GuessClassic(commands.Cog):
                     discord.File("images/classic/range_types.png"),
                     discord.File("images/classic/regions.png"),
                     discord.File("images/classic/release_year.png"),
-                ]
+                ],
             }
         else:
             self.game_state.attempts -= 1
@@ -154,7 +155,14 @@ class GuessClassic(commands.Cog):
             img = Image.new("RGB", (width, height), color=color)
 
         draw = ImageDraw.Draw(img)
-        draw.text((100, 100), f"{filename}\n{attributes}", fill=(0, 0, 0), align='center', anchor='mm', font_size=25)
+        draw.text(
+            (100, 100),
+            f"{filename}\n{attributes}",
+            fill=(0, 0, 0),
+            align="center",
+            anchor="mm",
+            font_size=25,
+        )
         img.save("images/classic/" + filename + ".png")
 
 
