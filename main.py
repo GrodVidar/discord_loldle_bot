@@ -37,7 +37,6 @@ else:
     engine = create_engine(f"sqlite:///{db_file}")
     Session = sessionmaker(bind=engine)
     if args.update:
-        print('hello')
         with Session() as session:
             populate_database(session, all_champions_file)
 
