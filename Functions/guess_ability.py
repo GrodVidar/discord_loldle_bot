@@ -1,10 +1,13 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from models import GameState
 
 
 class GuessAbility(commands.Cog):
+    FIRST_HINT = 5
+    SECOND_HINT = 10
     def __init__(self, bot):
         self.bot = bot
         self.game_state = GameState(bot)
@@ -40,39 +43,56 @@ class GuessAbility(commands.Cog):
                     reply += "Type `_hint` to receive a hint"
                 await message.channel.send(reply)
 
-    @commands.command()
-    async def guess_ability(self, ctx):
-        if not self.game_state.is_game_active:
-            self.game_state.start_game()
-            self.game_state.ability = self.game_state.champion.get_random_ability()
-
-            self.game_state.ability.get_image()
-            thread = await ctx.channel.create_thread(
-                name="Guess Ability", type=discord.ChannelType.public_thread
+    @app_commands.command(
+        name="ability",
+        description="Start a game to guess the ability icon of a random champion",
+    )
+    async def guess_ability(self, interaction: discord.Interaction):
+        if self.game_state.is_game_active:
+            await interaction.response.send_message(
+                "Game is already active.", ephemeral=True
             )
-            self.game_state.thread = thread
-            await thread.send("*Type `give_up` to give up*")
-            await thread.send(file=discord.File("images/edited_ability.png"))
-        else:
-            await ctx.send("Game is being played now!")
+            return
+        self.game_state.start_game()
+        self.game_state.ability = self.game_state.champion.get_random_ability()
 
-    @commands.command()
-    async def hint(self, ctx):
-        if ctx.channel == self.game_state.thread:
-            if self.game_state.attempts < 5:
-                await ctx.send(
-                    f"{5 - self.game_state.attempts} Attempts left to get the next hint"
-                )
-            elif 5 <= self.game_state.attempts < 10:
-                await ctx.send(
-                    f"Ability name: {self.game_state.ability.name}\n"
-                    f"Next hint after {10 - self.game_state.attempts} attempts"
-                )
-            else:
-                await ctx.send(
-                    f"Ability name: {self.game_state.ability.name}",
-                    file=discord.File("images/ability.png"),
-                )
+        self.game_state.ability.get_image()
+        thread = await interaction.channel.create_thread(
+            name="Guess Ability", type=discord.ChannelType.public_thread
+        )
+        self.game_state.thread = thread
+        await thread.send("*Type `give_up` to give up*")
+        await thread.send(file=discord.File("images/edited_ability.png"))
+        await interaction.response.send_message("Game started!", ephemeral=True)
+
+    @app_commands.command(
+        name="hint",
+        description=f"Get a hint for the ability name, hints are available after {FIRST_HINT} attempts",
+    )
+    async def hint(self, interaction: discord.Interaction):
+        if not self.game_state.is_game_active:
+            return await interaction.response.send_message(
+                "No active game", ephemeral=True
+            )
+        if interaction.channel != self.game_state.thread:
+            return await interaction.response.send_message(
+                "You can only get hints in the game thread", ephemeral=True
+            )
+        if self.game_state.attempts < self.FIRST_HINT:
+            return await interaction.response.send_message(
+                f"You need to guess at least {self.FIRST_HINT} times to get a hint, {self.FIRST_HINT - self.game_state.attempts} guesses left.", ephemeral=True
+            )
+
+        if self.FIRST_HINT <= self.game_state.attempts < self.SECOND_HINT:
+            await interaction.followup.send(
+                f"Ability name: {self.game_state.ability.name}\n"
+                f"Next hint after {self.SECOND_HINT - self.game_state.attempts} attempts"
+            )
+        else:
+            await interaction.followup.send(
+                f"Ability name: {self.game_state.ability.name}",
+                file=discord.File("images/ability.png"),
+            )
 
 
 async def setup(bot):

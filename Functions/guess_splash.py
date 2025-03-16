@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 
 from models import GameState
@@ -41,20 +42,26 @@ class GuessSplash(commands.Cog):
                     reply, file=discord.File("images/edited_splash.jpg")
                 )
 
-    @commands.command()
-    async def guess_splash(self, ctx):
-        if not self.game_state.is_game_active:
-            self.game_state.start_game()
-            self.game_state.skin = self.game_state.champion.get_random_skin()
-            self.game_state.skin.get_image()
-            thread = await ctx.channel.create_thread(
-                name="Guess Splash Art", type=discord.ChannelType.public_thread
+    @app_commands.command(
+        name="splash",
+        description="Start a game to guess the splash art of a random champion",
+    )
+    async def guess_splash(self, interaction: discord.Interaction):
+        if self.game_state.is_game_active:
+            await interaction.response.send_message(
+                "Game is already active.", ephemeral=True
             )
-            self.game_state.thread = thread
-            await thread.send("*Type `give_up` to give up*")
-            await thread.send(file=discord.File("images/edited_splash.jpg"))
-        else:
-            await ctx.send("Game is being played now!")
+            return
+        self.game_state.start_game()
+        self.game_state.skin = self.game_state.champion.get_random_skin()
+        self.game_state.skin.get_image()
+        thread = await interaction.channel.create_thread(
+            name="Guess Splash Art", type=discord.ChannelType.public_thread
+        )
+        self.game_state.thread = thread
+        await thread.send("*Type `give_up` to give up*")
+        await thread.send(file=discord.File("images/edited_splash.jpg"))
+        await interaction.response.send_message("Game started!", ephemeral=True)
 
 
 async def setup(bot):

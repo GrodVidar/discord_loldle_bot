@@ -1,5 +1,7 @@
 import argparse
+import asyncio
 import os
+from typing import Optional, Literal
 
 import discord
 from discord.ext import commands
@@ -10,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from models import Base
 from repository import populate_database
+from bot import Bot
 
 parser = argparse.ArgumentParser(description="Loldle")
 parser.add_argument(
@@ -21,60 +24,52 @@ args = parser.parse_args()
 
 load_dotenv()
 
-TOKEN = os.getenv("BOT_TOKEN")
-GAME = os.getenv("GAME")
+TOKEN = os.getenv("BOT_TOKEN", '')
+GAME = os.getenv("GAME", '')
 
-db_file = "loldle.db"
-all_champions_file = "champion_data.json"
-add_file = "add_champion.json"
-if not os.path.exists(db_file):
-    engine = create_engine(f"sqlite:///{db_file}")
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    with Session() as session:
-        populate_database(session, all_champions_file)
-else:
-    engine = create_engine(f"sqlite:///{db_file}")
-    Session = sessionmaker(bind=engine)
-    if args.update:
-        with Session() as session:
-            populate_database(session, all_champions_file)
+bot = Bot(args.update, activity=discord.Game(GAME))
 
-if os.path.exists(add_file):
-    with Session() as session:
-        populate_database(session, add_file)
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+async def sync(
+    ctx: commands.Context,
+    guilds: commands.Greedy[discord.Object],
+    spec: Optional[Literal["~", "*", "^"]] = None,
+) -> None:
+    print("sync called")
+    if not guilds:
+        if spec == "~":
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "^":
+            ctx.bot.tree.clear_commands(guild=ctx.guild)
+            await ctx.bot.tree.sync(guild=ctx.guild)
+            synced = []
+        else:
+            synced = await ctx.bot.tree.sync()
 
+        await ctx.send(
+            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
 
-class Bot(commands.Bot):
-    def __init__(self):
-        intents = discord.Intents.default()
-        intents.messages = True
-        intents.message_content = True
-        super().__init__(command_prefix={"_"}, intents=intents)
-
-    @property
-    def session(self):
-        return Session()
-
-
-client = Bot()
-
-cogs = ["Functions.guess_ability", "Functions.guess_splash", "Functions.guess_classic"]
-
-
-@client.event
-async def on_ready():
-    print("Bot is ready")
-    await client.change_presence(
-        status=discord.Status.online, activity=discord.Game(GAME)
-    )
-    for cog in cogs:
+    ret = 0
+    for guild in guilds:
         try:
-            print(f"loading cog {cog}")
-            await client.load_extension(cog)
-        except Exception as e:
-            exc = "{}: {}".format(type(e).__name__, e)
-            print(f"Failed to load cog {cog}\n{exc}")
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            ret += 1
 
+    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
-client.run(TOKEN)
+async def main(bot):
+    async with bot:
+        await bot.start(TOKEN)
+
+if __name__ == "__main__":
+    asyncio.run(main(bot))

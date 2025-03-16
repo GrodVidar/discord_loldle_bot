@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 from sqlalchemy import func, or_
@@ -40,35 +41,42 @@ class GuessClassic(commands.Cog):
                 )
                 await self.game_state.stop_game()
 
-    @commands.command()
-    async def guess_classic(self, ctx):
-        if not self.game_state.is_game_active:
-            self.game_state.start_game()
-            thread = await ctx.channel.create_thread(
-                name="Guess Classic", type=discord.ChannelType.public_thread
+    @app_commands.command(
+        name="classic",
+        description="Start a game of guessing the champion",
+    )
+    async def guess_classic(self, interaction: discord.Interaction):
+        if self.game_state.is_game_active:
+            await interaction.response.send_message(
+                "Game is already active.", ephemeral=True
             )
-            await thread.send("*Type `give_up` to give up*")
-            self.game_state.thread = thread
-        else:
-            await ctx.send("Game is being played now!")
+            return
+        self.game_state.start_game()
+        thread = await interaction.channel.create_thread(
+            name="Guess Classic", type=discord.ChannelType.public_thread
+        )
+        await thread.send("*Type `give_up` to give up*")
+        self.game_state.thread = thread
+        await interaction.response.send_message("Game started!", ephemeral=True)
 
     def compare_champions(self, champion_name):
-        champion = (
-            self.bot.session.query(Champion)
-            .options(
-                joinedload(Champion.positions),
-                joinedload(Champion.species),
-                joinedload(Champion.range_types),
-                joinedload(Champion.regions),
-            )
-            .filter(
-                or_(
-                    func.lower(Champion.name) == func.lower(champion_name),
-                    func.lower(Champion.champion_id) == func.lower(champion_name),
+        with self.bot.session as session:
+            champion = (
+                session.query(Champion)
+                .options(
+                    joinedload(Champion.positions),
+                    joinedload(Champion.species),
+                    joinedload(Champion.range_types),
+                    joinedload(Champion.regions),
                 )
+                .filter(
+                    or_(
+                        func.lower(Champion.name) == func.lower(champion_name),
+                        func.lower(Champion.champion_id) == func.lower(champion_name),
+                    )
+                )
+                .first()
             )
-            .first()
-        )
         print(champion)
         if champion:
             self.compare_attribute(
