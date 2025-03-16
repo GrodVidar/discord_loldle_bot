@@ -7,6 +7,7 @@ from sqlalchemy import (Boolean, Column, ForeignKey, Integer, String, Table,
                         func)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, joinedload, reconstructor, relationship
+from thefuzz import fuzz
 
 Base = declarative_base()
 
@@ -334,6 +335,8 @@ class Champion(Base):
 
 
 class GameState:
+    threshold = 80
+
     def __init__(self, bot):
         self.bot = bot
         self.attempts = 0
@@ -353,13 +356,11 @@ class GameState:
 
     def start_game(self):
         self.attempts = 0
-        self.champion = Champion.get_random_champion(self.bot.session)
+        with self.bot.session as session:
+            self.champion = Champion.get_random_champion(session)
         self.is_game_active = True
 
-    def guess(self, champion: str):
+    def guess(self, guess: str):
         self.attempts += 1
-        if champion.lower().replace(" ", "").replace(
-            "'", ""
-        ) == self.champion.name.lower().replace(" ", "").replace("'", ""):
-            return True
-        return False
+        ratio = fuzz.ratio(self.champion.name.lower(), guess.lower())
+        return ratio >= self.threshold
