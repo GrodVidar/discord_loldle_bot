@@ -3,19 +3,20 @@ from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
-from repository import populate_database
+from repository import populate_database, add_emojis
 from models import Base
 
 EXTENSIONS = [
     "Functions.guess_ability",
     "Functions.guess_splash",
     "Functions.guess_classic",
+    "Functions.guess_emoji",
 ]
 
 
 class Bot(commands.Bot):
 
-    def __init__(self, update=False, *args, **kwargs):
+    def __init__(self, update, emojis, *args, **kwargs):
         intents = discord.Intents.default()
         intents.messages = True
         intents.message_content = True
@@ -33,6 +34,9 @@ class Bot(commands.Bot):
                 with self.Session() as session:
                     populate_database(session, 'add_champion.json')
                     os.remove('add_champion.json')
+        if emojis:
+            with self.Session() as session:
+                add_emojis(session, emojis)
 
         super().__init__(command_prefix={"_"}, intents=intents)
 
