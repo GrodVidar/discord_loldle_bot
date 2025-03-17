@@ -52,6 +52,7 @@ class GuessClassic(commands.Cog):
             )
             return
         await interaction.response.defer(ephemeral=True)
+
         self.game_state.start_game()
         thread = await interaction.channel.create_thread(
             name="Guess Classic", type=discord.ChannelType.public_thread

@@ -368,5 +368,3 @@ class GameState:
 
     def guess_fuzzy(self, guess: str):
         self.attempts += 1
-        ratio = fuzz.ratio(self.champion.name.lower(), guess.lower())
-        return ratio >= self.threshold

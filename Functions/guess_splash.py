@@ -52,6 +52,7 @@ class GuessSplash(commands.Cog):
                 "Game is already active.", ephemeral=True
             )
             return
+
         await interaction.response.defer(ephemeral=True)
         self.game_state.start_game()
         self.game_state.skin = self.game_state.champion.get_random_skin()
@@ -63,6 +64,7 @@ class GuessSplash(commands.Cog):
         await thread.send("*Type `give_up` to give up*")
         await thread.send(file=discord.File("images/edited_splash.jpg"))
         await interaction.followup.send("Game started!", ephemeral=True)
+
 
 
 async def setup(bot):
