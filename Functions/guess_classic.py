@@ -51,13 +51,14 @@ class GuessClassic(commands.Cog):
                 "Game is already active.", ephemeral=True
             )
             return
+        await interaction.response.defer(ephemeral=True)
         self.game_state.start_game()
         thread = await interaction.channel.create_thread(
             name="Guess Classic", type=discord.ChannelType.public_thread
         )
         await thread.send("*Type `give_up` to give up*")
         self.game_state.thread = thread
-        await interaction.response.send_message("Game started!", ephemeral=True)
+        await interaction.followup.send("Game started!", ephemeral=True)
 
     def compare_champions(self, champion_name):
         with self.bot.session as session:

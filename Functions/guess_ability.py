@@ -29,7 +29,7 @@ class GuessAbility(commands.Cog):
                 )
                 await self.game_state.stop_game()
                 return
-            if self.game_state.guess(message.content):
+            if self.game_state.guess_fuzzy(message.content):
                 await message.channel.send(
                     f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
                     f"It took {self.game_state.attempts} attempts.",
@@ -53,6 +53,7 @@ class GuessAbility(commands.Cog):
                 "Game is already active.", ephemeral=True
             )
             return
+        await interaction.response.defer(ephemeral=True)
         self.game_state.start_game()
         self.game_state.ability = self.game_state.champion.get_random_ability()
 
@@ -63,7 +64,7 @@ class GuessAbility(commands.Cog):
         self.game_state.thread = thread
         await thread.send("*Type `give_up` to give up*")
         await thread.send(file=discord.File("images/edited_ability.png"))
-        await interaction.response.send_message("Game started!", ephemeral=True)
+        await interaction.followup.send("Game started!", ephemeral=True)
 
     @app_commands.command(
         name="hint",
