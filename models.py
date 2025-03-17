@@ -256,6 +256,10 @@ class Champion(Base):
     abilities = relationship("Ability", backref=backref("champion"))
     patch = Column(String)
 
+    emoji_1 = Column(String)
+    emoji_2 = Column(String)
+    emoji_3 = Column(String)
+
     def __init__(
         self,
         champion_id,
@@ -372,4 +376,3 @@ class GameState:
         self.attempts += 1
         ratio = fuzz.ratio(self.champion.name.lower(), guess.lower())
         return ratio >= self.threshold
-

@@ -20,6 +20,10 @@ parser.add_argument(
     action="store_true",
     help="Flag to trigger update db from champion_data.json",
 )
+parser.add_argument(
+    "--emoji",
+    type=str, required=True, help="Flag to trigger add_emojis from csv file",
+)
 args = parser.parse_args()
 
 load_dotenv()
@@ -27,7 +31,7 @@ load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN", '')
 GAME = os.getenv("GAME", '')
 
-bot = Bot(args.update, activity=discord.Game(GAME))
+bot = Bot(args.update, args.emoji,activity=discord.Game(GAME))
 
 @bot.command()
 @commands.guild_only()
