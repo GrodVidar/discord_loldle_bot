@@ -326,6 +326,8 @@ class Champion(Base):
                 joinedload(Champion.species),
                 joinedload(Champion.range_types),
                 joinedload(Champion.regions),
+                joinedload(Champion.skins),
+                joinedload(Champion.abilities),
             )
             .order_by(func.random())
             .first()
