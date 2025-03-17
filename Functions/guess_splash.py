@@ -66,6 +66,5 @@ class GuessSplash(commands.Cog):
         await interaction.followup.send("Game started!", ephemeral=True)
 
 
-
 async def setup(bot):
     await bot.add_cog(GuessSplash(bot))

@@ -326,6 +326,8 @@ class Champion(Base):
                 joinedload(Champion.species),
                 joinedload(Champion.range_types),
                 joinedload(Champion.regions),
+                joinedload(Champion.skins),
+                joinedload(Champion.abilities),
             )
             .order_by(func.random())
             .first()
@@ -368,3 +370,6 @@ class GameState:
 
     def guess_fuzzy(self, guess: str):
         self.attempts += 1
+        ratio = fuzz.ratio(self.champion.name.lower(), guess.lower())
+        return ratio >= self.threshold
+
