@@ -35,9 +35,11 @@ class GuessClassic(commands.Cog):
             comparison = self.compare_champions(message.content)
             await message.channel.send(**comparison)
             if self.game_state.guess(message.content):
+                await message.add_reaction("⭐")
                 await message.channel.send(
                     f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
-                    f"It took {self.game_state.attempts} attempts."
+                    f"It took {self.game_state.attempts} attempts.\n"
+                    f"The correct answer was: {self.game_state.champion.name}"
                 )
                 await self.game_state.stop_game()
 

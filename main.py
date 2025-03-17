@@ -68,10 +68,12 @@ async def sync(
     await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
 
-async def main(bot):
+"""async def main(bot):
     async with bot:
-        await bot.start(TOKEN)
+        await bot.start(TOKEN)"""
+
+def main(bot):
+    bot.run(TOKEN)
 
 if __name__ == "__main__":
-    asyncio.run(main(bot))
-
+    main(bot)

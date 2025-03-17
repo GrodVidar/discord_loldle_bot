@@ -29,14 +29,16 @@ class GuessSplash(commands.Cog):
                 await self.game_state.stop_game()
                 return
             if self.game_state.guess_fuzzy(message.content):
+                await message.add_reaction("⭐")
                 await message.channel.send(
                     f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
-                    f"It took {self.game_state.attempts} attempts.",
+                    f"It took {self.game_state.attempts} attempts.\n"
+                    f"The correct answer was: {self.game_state.champion.name}\n",
                     file=discord.File("images/splash.jpg"),
                 )
                 await self.game_state.stop_game()
             else:
-                reply = "Wrong champion."
+                reply = "**Wrong champion.**"
                 self.game_state.skin.zoom_out()
                 await message.channel.send(
                     reply, file=discord.File("images/edited_splash.jpg")

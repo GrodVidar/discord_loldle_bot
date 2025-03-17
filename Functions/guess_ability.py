@@ -30,17 +30,19 @@ class GuessAbility(commands.Cog):
                 await self.game_state.stop_game()
                 return
             if self.game_state.guess_fuzzy(message.content):
+                await message.add_reaction("⭐")
                 await message.channel.send(
                     f"{message.author.nick if message.author.nick else message.author.display_name} guessed correct!\n"
-                    f"It took {self.game_state.attempts} attempts.",
+                    f"It took {self.game_state.attempts} attempts.\n"
+                    f"The correct answer was: {self.game_state.champion.name}\n"
                 )
                 await self.game_state.stop_game()
             else:
-                reply = "Wrong champion.\n"
+                reply = "**Wrong champion.**\n"
                 if self.game_state.attempts < 5:
-                    reply += f"{5 - self.game_state.attempts} left to get ability name"
+                    reply += f"{5 - self.game_state.attempts} left to get next hint"
                 else:
-                    reply += "Type `_hint` to receive a hint"
+                    reply += "Call `/hint` in this thread to receive a hint"
                 await message.channel.send(reply)
 
     @app_commands.command(
@@ -85,12 +87,12 @@ class GuessAbility(commands.Cog):
             )
 
         if self.FIRST_HINT <= self.game_state.attempts < self.SECOND_HINT:
-            await interaction.followup.send(
+            await interaction.response.send_message(
                 f"Ability name: {self.game_state.ability.name}\n"
                 f"Next hint after {self.SECOND_HINT - self.game_state.attempts} attempts"
             )
         else:
-            await interaction.followup.send(
+            await interaction.response.send_message(
                 f"Ability name: {self.game_state.ability.name}",
                 file=discord.File("images/ability.png"),
             )
