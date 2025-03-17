@@ -55,7 +55,7 @@ class GuessEmoji(commands.Cog):
         self.game_state.start_game()
 
         thread = await interaction.channel.create_thread(
-            name="Gues Emoji", type=discord.ChannelType.public_thread
+            name="Guess Emoji", type=discord.ChannelType.public_thread
         )
         self.game_state.thread = thread
         await thread.send("*Type `give_up` to give up*")
